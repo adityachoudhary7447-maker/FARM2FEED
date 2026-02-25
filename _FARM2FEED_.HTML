@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Farm2Feed - Organic Roots, Collective Good</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts: Manrope -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "beige-light": "#FDFBF7",
+                        "sage-soft": "#e7f3eb",
+                        "indian-green": "#0d5c2c"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "sans": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Manrope', sans-serif; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .organic-blob {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }
+        .animate-marquee {
+            animation: marquee 30s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #13ec5b33; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const Navbar = ({ cartCount = 3 }) => {
+            const navigate = useNavigate();
+            return (
+                <header className="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10 px-4 md:px-20 py-4">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
+                        <div className="flex items-center gap-10">
+                            <Link to="/" className="flex items-center gap-2 text-primary group">
+                                <span className="material-symbols-outlined text-3xl font-bold group-hover:scale-110 transition-transform">eco</span>
+                                <h2 className="text-slate-900 dark:text-slate-100 text-xl font-extrabold tracking-tight">Farm2Feed</h2>
+                            </Link>
+                            <nav className="hidden lg:flex items-center gap-8">
+                                <Link to="/mission" className="text-sm font-semibold hover:text-primary transition-colors">Our Story</Link>
+                                <Link to="/shop" className="text-sm font-semibold hover:text-primary transition-colors">Marketplace</Link>
+                                <Link to="/impact" className="text-sm font-semibold hover:text-primary transition-colors">Impact</Link>
+                            </nav>
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <div className="hidden lg:flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg px-3 py-1.5 border border-primary/20">
+                                <span className="material-symbols-outlined text-primary text-xl">search</span>
+                                <input className="bg-transparent border-none focus:ring-0 text-sm w-48 placeholder:text-slate-400" placeholder="Search..." type="text"/>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Link to="/login" className="px-5 py-2 text-sm font-bold bg-primary text-background-dark rounded-lg hover:brightness-110 transition-all">Login</Link>
+                                <Link to="/cart" className="relative p-2 flex items-center justify-center bg-primary/10 text-slate-900 dark:text-slate-100 rounded-lg hover:bg-primary/20 transition-all">
+                                    <span className="material-symbols-outlined">shopping_cart</span>
+                                    <span className="absolute -top-1 -right-1 bg-primary text-background-dark text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const Footer = () => (
+            <footer className="py-20 px-6 lg:px-20 bg-slate-950 text-white mt-auto">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-white/10 pb-16">
+                    <div className="col-span-1 md:col-span-1">
+                        <div className="flex items-center gap-3 text-primary mb-6">
+                            <span className="material-symbols-outlined text-3xl font-bold">eco</span>
+                            <h2 className="text-xl font-extrabold text-white tracking-tight">Farm2Feed</h2>
+                        </div>
+                        <p className="text-slate-400 text-sm leading-relaxed mb-6">
+                            India's leading platform for transparent organic produce and systemic hunger relief.
+                        </p>
+                        <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"><span className="material-symbols-outlined text-sm">public</span></div>
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"><span className="material-symbols-outlined text-sm">mail</span></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 className="font-bold mb-6 text-lg">Mission</h4>
+                        <ul className="space-y-4 text-slate-400 text-sm">
+                            <li><Link to="/mission" className="hover:text-primary transition-colors">Our Farmer Model</Link></li>
+                            <li><Link to="/impact" className="hover:text-primary transition-colors">Impact Reports</Link></li>
+                            <li><a href="#" className="hover:text-primary transition-colors">Organic Certification</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold mb-6 text-lg">Shop</h4>
+                        <ul className="space-y-4 text-slate-400 text-sm">
+                            <li><Link to="/shop" className="hover:text-primary transition-colors">Organic Grains</Link></li>
+                            <li><Link to="/shop" className="hover:text-primary transition-colors">Fresh Vegetables</Link></li>
+                            <li><Link to="/shop" className="hover:text-primary transition-colors">Subscription Boxes</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold mb-6 text-lg">Location</h4>
+                        <p className="text-slate-400 text-sm leading-relaxed mb-4">42nd Main, Sector 4, HSR Layout<br/>Bengaluru, Karnataka 560102</p>
+                        <div className="h-24 rounded-lg bg-slate-900 flex items-center justify-center border border-white/10 opacity-50 grayscale">
+                             <span className="material-symbols-outlined text-3xl">map</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto pt-8 flex flex-col md:flex-row justify-between items-center text-slate-500 text-xs">
+                    <p>© 2024 Farm2Feed Foundation. Supporting rural development through direct farm-to-table commerce.</p>
+                    <div className="flex gap-6 mt-4 md:mt-0">
+                        <a className="hover:text-white transition-colors" href="#">Privacy Policy</a>
+                        <a className="hover:text-white transition-colors" href="#">Terms of Service</a>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        // --- Screens ---
+
+        const LoginScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="flex min-h-screen w-full flex-col lg:flex-row">
+                    <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between p-12 overflow-hidden bg-indian-green">
+                        <div className="absolute inset-0 z-0 opacity-60 bg-cover bg-center" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBnUrnhufLTG5GoRrh83W93BrMyrcyqr9Vvsu7C0u32PV2V330cTwJ1-6l6r6-VYuwGIHMtGs-0ukFbLKLJPnahGPkGAtpXINlaMm0xpUBlbNAZT42Y6YPtR2PXeOeKxChX0m18aM4iM-twqZrjDCRIX7HASFPEjyH0TRBRa31aQSXbCFEea93l-3E14xK5LghPjJYroWWN4YYMxqjoziDMGS0XPwhRXTCemoynBfcUvnd7klEYtZIVMZnSfn9mG0JYn6AhGeRMp25K')"}}></div>
+                        <div className="absolute inset-0 z-10 bg-gradient-to-t from-indian-green via-transparent to-indian-green/40"></div>
+                        <div className="relative z-20 flex items-center gap-3">
+                            <Link to="/" className="flex items-center gap-3">
+                                <div className="bg-primary text-background-dark p-2 rounded-lg"><span className="material-symbols-outlined text-3xl font-bold">potted_plant</span></div>
+                                <h1 className="text-white text-2xl font-extrabold tracking-tight">Farm2Feed</h1>
+                            </Link>
+                        </div>
+                        <div className="relative z-20 max-w-lg mb-12">
+                            <div className="glass-effect p-8 rounded-2xl text-white">
+                                <h2 className="text-4xl font-black leading-tight mb-4">Connecting Indian Farmers to Every Plate</h2>
+                                <p className="text-lg text-white/90 font-medium mb-6 leading-relaxed">Join the movement to end hunger through organic roots. Experience the purity of organic farming directly from the source.</p>
+                                <div className="flex items-center gap-4">
+                                    <p className="text-sm font-semibold tracking-wide">+10k Indians trust us</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 bg-white dark:bg-background-dark">
+                        <div className="w-full max-w-md">
+                            <div className="flex items-center gap-3 lg:hidden mb-10">
+                                <div className="bg-primary text-background-dark p-2 rounded-lg"><span className="material-symbols-outlined text-2xl font-bold">potted_plant</span></div>
+                                <h1 className="text-slate-900 dark:text-white text-xl font-extrabold tracking-tight">Farm2Feed</h1>
+                            </div>
+                            <div className="mb-8">
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome Back</h2>
+                                <p className="text-slate-500 dark:text-slate-400">Join the movement to support local agriculture.</p>
+                            </div>
+                            <div className="flex bg-sage-soft/30 dark:bg-slate-800 p-1.5 rounded-xl mb-8">
+                                <button className="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white">Login</button>
+                                <button className="flex-1 py-2.5 text-sm font-bold rounded-lg transition-all text-slate-500 dark:text-slate-400">Sign Up</button>
+                            </div>
+                            <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); navigate('/'); }}>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Mobile Number</label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                                            <span className="text-slate-400 font-medium">+91</span>
+                                        </div>
+                                        <input className="block w-full pl-14 pr-4 py-4 bg-background-light dark:bg-slate-800 border-transparent focus:border-primary focus:ring-0 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 transition-all shadow-sm" placeholder="Enter mobile number" type="tel"/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">Password</label>
+                                        <a className="text-xs font-bold text-primary hover:underline" href="#">Forgot password?</a>
+                                    </div>
+                                    <div className="relative">
+                                        <input className="block w-full px-4 py-4 bg-background-light dark:bg-slate-800 border-transparent focus:border-primary focus:ring-0 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 transition-all shadow-sm" placeholder="••••••••" type="password"/>
+                                        <button className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400" type="button"><span className="material-symbols-outlined text-xl">visibility</span></button>
+                                    </div>
+                                </div>
+                                <button className="w-full bg-primary hover:bg-primary/90 text-background-dark font-extrabold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98]" type="submit">Sign In</button>
+                            </form>
+                            <div className="relative my-8">
+                                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200 dark:border-slate-700"></span></div>
+                                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-background-dark px-2 text-slate-400 font-bold">Or continue with</span></div>
+                            </div>
+                            <button className="flex items-center justify-center gap-3 w-full px-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all group">
+                                <img alt="Google" className="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu2ltUc2RT0eVWmOe32Ml7fMFl1YqlTdJktOEvj-EkJFpcEznvYHnKzjRnOjxPpBAEbcN7De458E_oEEoMJvAAiWrHCYmWFSG79gzXwvs6ucM1p7gmJ1Sz7AukWkvdbLe5-k1nHtFe_Z0IN6rHIZlutISqzMOEwTguDkrWfmYS_sbV8KR7rxuN8geH9rw23RqIF4JLezAef0aBIGQGNxBNnijY10e8Lmb9Mjj2VPHfmEgDyOmJH1ytOneq57lUE3o-WHFaYPtfTSmw"/>
+                                <span className="text-slate-700 dark:text-slate-200 font-bold text-sm">Continue with Google</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MissionScreen = () => (
+            <div>
+                <Navbar />
+                <main>
+                    <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+                        <div className="absolute inset-0 bg-cover bg-center z-0" style={{backgroundImage: "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.3)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtgEcriIDnI8tWe807cihnLSnZtVlCTlCQ_DUCHLbsDzvW0V0KX1E1L9csHjEggzLR4sbtFtdv0Xdiz19lOwfu6MBtbZsCbXdBas3o7ocGpVVdF19MJcfTscUVwwBB8-HXepu3KWb0q7oxUG9IXrz_xZAl_PUXRBLCKT52x11SFbZjAdN7dgH42EG1i_Phz8CspO_QAm4RsXMxkJI6YOo5w3P8B9p7NVN0uPboasJq_RNU23_7XUG1BOe8KG1B9mqC9M3kBYSXg9Iu')"}}></div>
+                        <div className="relative z-10 text-center px-4 max-w-4xl">
+                            <span className="inline-block px-4 py-1 rounded-full bg-primary/20 text-primary border border-primary/30 text-sm font-bold mb-6">ESTABLISHED 2018</span>
+                            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6">Rooted in Soil,<br/><span className="text-primary">Driven by Soul</span></h1>
+                            <p className="text-lg md:text-xl text-white/90 font-medium max-w-2xl mx-auto mb-10">Empowering Indian farmers and nourishing the hungry through sustainable organic agriculture and transparent supply chains.</p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link to="/shop" className="bg-primary text-slate-900 px-8 py-4 rounded-xl font-bold text-lg hover:scale-105 transition-transform">Get Involved</Link>
+                                <button className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg">Our Journey</button>
+                            </div>
+                        </div>
+                    </section>
+                    <section className="py-20 px-4 md:px-20 bg-white dark:bg-slate-950">
+                        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                            <div className="p-10 rounded-2xl bg-background-light dark:bg-background-dark border border-primary/10">
+                                <span className="material-symbols-outlined text-primary text-5xl mb-4">agriculture</span>
+                                <p className="text-4xl font-black mb-2">10,000+</p>
+                                <p className="text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider text-sm">Farmers Supported</p>
+                            </div>
+                            <div className="p-10 rounded-2xl bg-primary/5 border border-primary/20 scale-105 shadow-xl">
+                                <span className="material-symbols-outlined text-primary text-5xl mb-4">volunteer_activism</span>
+                                <p className="text-4xl font-black mb-2">500,000+</p>
+                                <p className="text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider text-sm">Meals Served</p>
+                            </div>
+                            <div className="p-10 rounded-2xl bg-background-light dark:bg-background-dark border border-primary/10">
+                                <span className="material-symbols-outlined text-primary text-5xl mb-4">landscape</span>
+                                <p className="text-4xl font-black mb-2">25,000+</p>
+                                <p className="text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider text-sm">Organic Acres</p>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+                <Footer />
+            </div>
+        );
+
+        const ShopScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <div>
+                    <Navbar />
+                    <main className="max-w-7xl mx-auto px-4 py-8">
+                        <div className="flex flex-col lg:flex-row gap-8">
+                            <aside className="w-full lg:w-64 shrink-0 space-y-8">
+                                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 text-primary mb-2">
+                                        <span className="material-symbols-outlined text-lg">volunteer_activism</span>
+                                        <span className="text-xs font-bold uppercase tracking-wider">Direct Impact</span>
+                                    </div>
+                                    <p className="text-sm font-medium leading-relaxed">Every ₹500 spent provides 1 meal to children in need.</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">Categories</h3>
+                                    <div className="space-y-3">
+                                        {['All Produce', 'Fresh Vegetables', 'Seasonal Fruits', 'Organic Grains'].map((cat, i) => (
+                                            <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                                                <input defaultChecked={i===0} className="rounded border-slate-300 text-primary focus:ring-primary w-5 h-5" type="checkbox"/>
+                                                <span className="text-sm font-semibold">{cat}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </aside>
+                            <div className="flex-1">
+                                <h2 className="text-3xl font-extrabold mb-8">Seasonal Harvest</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    <ProductCard 
+                                        name="Alphonso Mangoes" 
+                                        price="450" 
+                                        unit="1 Dozen" 
+                                        loc="Ratnagiri" 
+                                        img="https://lh3.googleusercontent.com/aida-public/AB6AXuCUeX9fUEmDjbaqmZrXmlOqaPLJjSwu4tmM3nbqYjn_r-KrTIYjWY0jaPiXn14sFFR2e7A1zWVqsR1_AmZXCRFLtdy0Td7GtNzEzGO-cXCge9mMqCCfK1kkk3gOH-dgEgz7TzdzGUAu6oUcuEs0mGpICTV0nNrBj36qeV49eaGEGjg5SC3vGdgE2ywwBig9skLj31Qa3hOGsv17PwqEdQ2QQMTtI7pye3PLAbPdUm9PbTq_qfR1MrkRRo4FfC-ld18vOvysWMnRBewD"
+                                        onAdd={() => navigate('/cart')}
+                                    />
+                                    <ProductCard 
+                                        name="Basmati Rice (Long)" 
+                                        price="185" 
+                                        unit="1kg Pack" 
+                                        loc="Haryana" 
+                                        img="https://lh3.googleusercontent.com/aida-public/AB6AXuD6XGRuf3j7eD2JerWR5wguPSQQSYxEPW7QvMrVu15wxEsqd7EB_2atCbF_sdbZPsM4ZaU6HPSShFCJJ4w1QEVa3ovOkgnCooPRsN48jf-jOGHWbKmQZL7p9yqEgAPCq89RMelifvhM6jJJaxckr6ArWfdtxXxgb1d3juA6UIXcKsR-AU_Qyb4ex4af6rFOW1VHCQHbEZg3aJJ9jCXyOPS-FNgPAejIRM_87Tocn6U-73oy9B2JSpUCBwNmZdhAi1HYYV_ZHlOWRmyP"
+                                        onAdd={() => navigate('/cart')}
+                                    />
+                                    <ProductCard 
+                                        name="Desi Cow Ghee" 
+                                        price="850" 
+                                        unit="500ml Jar" 
+                                        loc="Local Dairy" 
+                                        img="https://lh3.googleusercontent.com/aida-public/AB6AXuB7fMqF4ZavqVw5aRbAaGrClqW_f8uV4H8k4C-of-bZnQAA4ukGxbrxe_xhqGm_llCaXUc4PZey3mMe9GWAthKEJGPQenLK9TDaJtALJ8OlzjGKTqI5HZcmNAq6dX8OvWhAw77X0sCFP-dLfPpUBxMcyijDXGLir7uI2u6fuvOVOFPuAB-6ydN3PxqS47rO1CnywyWyqUCpRPwqYg3JdSxYTx3gtWxihIs4wBe-UKHmdrZZDj0_RgDOpNUUNhp6V3ubX-cE0D2exvT3"
+                                        onAdd={() => navigate('/cart')}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const ProductCard = ({ name, price, unit, loc, img, onAdd }) => (
+            <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-xl transition-all flex flex-col">
+                <div className="relative aspect-square overflow-hidden">
+                    <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src={img} alt={name}/>
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        <span className="bg-primary text-slate-900 text-[10px] font-extrabold px-2 py-1 rounded-full uppercase">Verified Organic</span>
+                    </div>
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-1">
+                        <h3 className="font-bold text-lg">{name}</h3>
+                        <span className="text-primary font-black text-lg">₹{price}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-400 text-xs font-bold mb-4">
+                        <span className="material-symbols-outlined text-sm">scale</span> {unit}
+                        <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                        <span className="material-symbols-outlined text-sm">location_on</span> {loc}
+                    </div>
+                    <button onClick={onAdd} className="mt-auto bg-primary hover:bg-primary/90 text-slate-900 w-full py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all">
+                        <span className="material-symbols-outlined text-lg">add_shopping_cart</span> Add to Cart
+                    </button>
+                </div>
+            </div>
+        );
+
+        const CartScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <Navbar />
+                    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+                        <h1 className="text-3xl font-extrabold tracking-tight mb-8">Secure Checkout</h1>
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <div className="lg:col-span-8 space-y-6">
+                                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                                    <h2 className="font-bold mb-4 flex items-center gap-2"><span className="material-symbols-outlined text-primary">shopping_bag</span> Order Review</h2>
+                                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        <div className="py-4 flex items-center gap-4">
+                                            <img className="w-16 h-16 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOa5AJ0mxjTsIct0Zm31vhfpMUNxRw3MWuGIQtU35yzxGg-xyUerf0ezmaoZbSMzh-mK8OZ-IdcKnLMLNu3uCvjcqrz2T1BEB99w3FsiCkjZ5WUx4cno-GT_xHyc4DMOBp2EdBkLDGhEYV9jRPD6PP9q9TgNR5hdrJz4e-fQSOLhWckwDdwXDqneyseUdyrcPjtaaQchAhk675HzqcAkZKk4_8kigpUDv2lsTRcmN5E9VbFtAt02qcpNxn7arpWWgI3_hbPbLxRa06" alt=""/>
+                                            <div className="flex-1"><h4 className="font-bold">Organic Alphonso Mangoes</h4><p className="text-xs text-slate-500">2kg · Ratnagiri Orchards</p></div>
+                                            <p className="font-bold">₹900</p>
+                                        </div>
+                                        <div className="py-4 flex items-center gap-4">
+                                            <img className="w-16 h-16 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7fMqF4ZavqVw5aRbAaGrClqW_f8uV4H8k4C-of-bZnQAA4ukGxbrxe_xhqGm_llCaXUc4PZey3mMe9GWAthKEJGPQenLK9TDaJtALJ8OlzjGKTqI5HZcmNAq6dX8OvWhAw77X0sCFP-dLfPpUBxMcyijDXGLir7uI2u6fuvOVOFPuAB-6ydN3PxqS47rO1CnywyWyqUCpRPwqYg3JdSxYTx3gtWxihIs4wBe-UKHmdrZZDj0_RgDOpNUUNhp6V3ubX-cE0D2exvT3" alt=""/>
+                                            <div className="flex-1"><h4 className="font-bold">Desi Cow Ghee (A2)</h4><p className="text-xs text-slate-500">500ml · Bilona Processed</p></div>
+                                            <p className="font-bold">₹850</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+                                    <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><span className="material-symbols-outlined text-primary">payments</span> Payment Method</h2>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        <label className="border-2 border-primary bg-primary/5 rounded-xl p-4 text-center cursor-pointer">
+                                            <span className="material-symbols-outlined text-primary text-3xl mb-2">qr_code_2</span>
+                                            <span className="text-[11px] font-black uppercase block">UPI</span>
+                                        </label>
+                                        <label className="border-2 border-slate-100 dark:border-slate-800 rounded-xl p-4 text-center cursor-pointer hover:border-primary/40">
+                                            <span className="material-symbols-outlined text-slate-400 text-3xl mb-2">credit_card</span>
+                                            <span className="text-[11px] font-black uppercase block">Card</span>
+                                        </label>
+                                        <label className="border-2 border-slate-100 dark:border-slate-800 rounded-xl p-4 text-center cursor-pointer hover:border-primary/40">
+                                            <span className="material-symbols-outlined text-slate-400 text-3xl mb-2">account_balance</span>
+                                            <span className="text-[11px] font-black uppercase block">Banking</span>
+                                        </label>
+                                        <label className="border-2 border-slate-100 dark:border-slate-800 rounded-xl p-4 text-center cursor-pointer hover:border-primary/40">
+                                            <span className="material-symbols-outlined text-slate-400 text-3xl mb-2">local_shipping</span>
+                                            <span className="text-[11px] font-black uppercase block">COD</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="lg:col-span-4 space-y-6">
+                                <div className="bg-primary/10 rounded-2xl border border-primary/20 p-6">
+                                    <h2 className="text-lg font-extrabold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-primary">favorite</span> NGO Impact</h2>
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">With this purchase, you are directly supporting hunger relief programs.</p>
+                                    <div className="bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl border border-primary/10">
+                                        <div className="flex justify-between items-center mb-1"><span className="text-[11px] font-black uppercase text-slate-500">Order Impact</span><span className="text-primary font-black text-xl">4 Meals</span></div>
+                                        <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div className="bg-primary h-full w-3/4"></div></div>
+                                    </div>
+                                </div>
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-6 sticky top-24">
+                                    <h2 className="text-xl font-bold mb-6">Summary</h2>
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex justify-between text-sm"><span>Subtotal</span><span>₹1,750.00</span></div>
+                                        <div className="flex justify-between text-sm"><span>NGO Donation (2%)</span><span className="text-primary font-bold">₹35.00</span></div>
+                                        <div className="flex justify-between text-sm"><span>Tax</span><span>₹210.00</span></div>
+                                        <div className="pt-4 border-t flex justify-between items-center font-black text-xl"><span>Total</span><span>₹1,995.00</span></div>
+                                    </div>
+                                    <button onClick={() => navigate('/success')} className="w-full bg-primary text-slate-900 font-black py-4 rounded-xl shadow-lg flex items-center justify-center gap-2">Pay ₹1,995 <span className="material-symbols-outlined">arrow_forward</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const SuccessScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="flex items-center justify-center min-h-screen bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 text-center border border-slate-200">
+                        <div className="w-20 h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span className="material-symbols-outlined text-5xl">check_circle</span>
+                        </div>
+                        <h2 className="text-2xl font-black mb-2">Order Successful!</h2>
+                        <p className="text-slate-500 dark:text-slate-400 mb-8">Your transaction of ₹1,995 was successful. 4 meals have been added to our hunger relief initiative.</p>
+                        <div className="space-y-4">
+                            <button onClick={() => navigate('/impact')} className="w-full bg-primary text-slate-900 font-bold py-4 rounded-xl flex items-center justify-center gap-2">View My Impact</button>
+                            <button onClick={() => navigate('/shop')} className="w-full bg-slate-100 dark:bg-slate-800 font-bold py-4 rounded-xl">Back to Shop</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ImpactScreen = () => (
+            <div className="flex h-screen overflow-hidden">
+                <aside className="w-72 border-r border-primary/10 bg-white dark:bg-background-dark/50 flex flex-col shrink-0">
+                    <div className="p-6 flex flex-col gap-8 h-full">
+                        <Link to="/" className="flex items-center gap-3">
+                            <div className="bg-primary/20 p-2 rounded-lg text-primary"><span className="material-symbols-outlined text-3xl font-bold">potted_plant</span></div>
+                            <div className="flex flex-col"><h1 className="text-xl font-extrabold leading-none">Farm2Feed</h1><p className="text-[10px] uppercase tracking-widest text-primary font-bold">Impact Portal</p></div>
+                        </Link>
+                        <nav className="flex flex-col gap-2">
+                            <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 transition-all font-semibold"><span className="material-symbols-outlined">home</span>Home</Link>
+                            <Link to="/impact" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-slate-900 font-bold shadow-lg shadow-primary/20"><span className="material-symbols-outlined">dashboard</span>Impact Overview</Link>
+                            <Link to="/shop" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 transition-all font-semibold"><span className="material-symbols-outlined">shopping_basket</span>Shop</Link>
+                        </nav>
+                        <div className="mt-auto bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl">
+                             <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full border-2 border-primary bg-slate-200"></div><div><p className="text-xs font-black">NGO Admin</p><p className="text-[10px] text-slate-500">admin@farm2feed.in</p></div></div>
+                        </div>
+                    </div>
+                </aside>
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    <header className="h-16 border-b border-primary/10 bg-white dark:bg-background-dark/50 flex items-center justify-between px-8 z-10">
+                        <h2 className="text-lg font-bold flex items-center gap-2"><span className="material-symbols-outlined text-primary">monitoring</span> Live Impact Dashboard</h2>
+                        <div className="flex items-center gap-4">
+                            <span className="text-[11px] font-bold text-slate-500 flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>LIVE UPDATES</span>
+                        </div>
+                    </header>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-background-light dark:bg-background-dark">
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-black tracking-tight mb-2">India Impact Overview</h1>
+                            <p className="text-slate-500 font-medium">Tracking every grain from farm to plate across 14 states.</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            <ImpactCard title="Total Meals" value="1,254,082" icon="restaurant" color="primary" trend="+12.5%"/>
+                            <ImpactCard title="Funds Allocated" value="₹45.20M" icon="payments" color="blue-500" trend="98% Dist."/>
+                            <ImpactCard title="Active Farms" value="854" icon="potted_plant" color="amber-500" trend="+8 New"/>
+                            <ImpactCard title="Families" value="12,400+" icon="family_restroom" color="purple-500" trend="Direct Feed"/>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-8 border border-primary/5 flex flex-col">
+                                <h3 className="text-lg font-bold mb-4">Regional Distribution</h3>
+                                <div className="flex-1 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center min-h-[300px]">
+                                    <span className="material-symbols-outlined text-6xl text-primary/20">public</span>
+                                </div>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-primary/5">
+                                <h3 className="text-lg font-bold mb-6">Monthly Growth</h3>
+                                <div className="h-48 flex items-end justify-between gap-2">
+                                    <div className="w-full bg-primary/20 h-[40%] rounded-t-lg"></div>
+                                    <div className="w-full bg-primary/20 h-[60%] rounded-t-lg"></div>
+                                    <div className="w-full bg-primary h-[90%] rounded-t-lg shadow-lg shadow-primary/20"></div>
+                                    <div className="w-full bg-primary/20 h-[75%] rounded-t-lg"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <footer className="bg-slate-900 text-white h-10 flex items-center px-8 overflow-hidden whitespace-nowrap">
+                        <div className="flex gap-16 text-xs font-medium animate-marquee">
+                            <span>● New donation of ₹5,000 from Rahul S.</span>
+                            <span>● Truck #42 arrived at Mumbai Hub</span>
+                            <span>● New organic farm registered in Punjab</span>
+                            <span>● 500 meals dispatched to Bihar Flood Relief</span>
+                        </div>
+                    </footer>
+                </main>
+            </div>
+        );
+
+        const ImpactCard = ({ title, value, icon, trend, color }) => (
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-primary/5 shadow-sm">
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`p-2 rounded-lg bg-primary/10 text-primary`}>
+                        <span className="material-symbols-outlined">{icon}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-primary px-2 py-1 bg-primary/10 rounded-full">{trend}</span>
+                </div>
+                <p className="text-slate-500 text-xs font-bold uppercase mb-1">{title}</p>
+                <h3 className="text-2xl font-black">{value}</h3>
+            </div>
+        );
+
+        const HomeScreen = () => {
+            const navigate = useNavigate();
+            return (
+                <div className="min-h-screen">
+                    <Navbar />
+                    <main>
+                        <section className="relative w-full min-h-[85vh] flex items-center px-6 lg:px-20 overflow-hidden">
+                            <div className="absolute inset-0 z-0">
+                                <div className="absolute inset-0 bg-gradient-to-r from-background-light via-background-light/80 to-transparent z-10"></div>
+                                <img alt="Indian Farm" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHIp15NjyVCVeA0mrF3lkGxKNqhAH5bEtKTITKW_RMAYRH7bvUu4HXkia4qsCapbeuqwjjT9R51LKf0n3V5keKQFcJiujmiNzGmF1N0xXxKF-aRSkUwF9ddxaeqsg3NJx2Gqd9ujNV4JFSCGofWoL9nfAMdiYQVa9f_Asvu-0ZToOavmLXXcI1cNAJ9Ru6xSzpW0b5dg-oUntqwzv3aWzGUv9AFWK6XCJbqr5NXaz9Ultx5b3heLRwoCiQaAUKN2P4p_2yreuud_Qh"/>
+                            </div>
+                            <div className="relative z-20 max-w-2xl">
+                                <span className="inline-block px-4 py-1.5 mb-6 text-xs font-bold tracking-widest uppercase bg-primary/20 text-emerald-800 dark:text-primary rounded-full">Direct from Indian Soil</span>
+                                <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 dark:text-white mb-6">Fresh Produce, <span className="text-primary">Zero Hunger.</span></h1>
+                                <p className="text-lg text-slate-700 dark:text-slate-300 mb-10 leading-relaxed">Buy premium pesticide-free organic produce directly from local farmers. For every basket you purchase, we donate a meal to an Indian family in need.</p>
+                                <div className="flex flex-wrap gap-4">
+                                    <Link to="/shop" className="px-8 py-4 bg-primary text-background-dark font-bold text-lg rounded-xl shadow-lg hover:scale-105 transition-transform">Shop Now</Link>
+                                    <Link to="/impact" className="px-8 py-4 bg-white dark:bg-slate-800 border border-slate-200 font-bold text-lg rounded-xl hover:bg-slate-50 transition-colors">Our Impact</Link>
+                                </div>
+                            </div>
+                        </section>
+                        <section className="px-6 lg:px-20 py-24 bg-white dark:bg-slate-900">
+                            <div className="max-w-7xl mx-auto text-center mb-16">
+                                <h2 className="text-4xl font-extrabold mb-4">Our Simple Circle of Goodness</h2>
+                                <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">We've built a transparent bridge between healthy living and social impact.</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-7xl mx-auto">
+                                <StepCard icon="shopping_basket" title="1. Shop Organic" desc="Choose from seasonal fruits, vegetables, and grains grown without chemicals."/>
+                                <StepCard icon="handshake" title="2. Support Farmers" desc="We pay fair prices directly to small-scale Indian farmers, bypassing middlemen."/>
+                                <StepCard icon="restaurant" title="3. We Donate a Meal" desc="For every transaction, we work with local NGOs to provide a meal to those in need."/>
+                            </div>
+                        </section>
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        const StepCard = ({ icon, title, desc }) => (
+            <div className="text-center group">
+                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:bg-primary transition-colors">
+                    <span className="material-symbols-outlined text-4xl text-emerald-800 dark:text-primary group-hover:text-background-dark">{icon}</span>
+                </div>
+                <h3 className="text-xl font-bold mb-3">{title}</h3>
+                <p className="text-slate-600 dark:text-slate-400">{desc}</p>
+            </div>
+        );
+
+        // --- Router ---
+
+        const App = () => {
+            const { pathname } = useLocation();
+            
+            // Scroll to top on navigation
+            useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [pathname]);
+
+            return (
+                <Routes>
+                    <Route path="/" element={<HomeScreen />} />
+                    <Route path="/login" element={<LoginScreen />} />
+                    <Route path="/mission" element={<MissionScreen />} />
+                    <Route path="/shop" element={<ShopScreen />} />
+                    <Route path="/cart" element={<CartScreen />} />
+                    <Route path="/success" element={<SuccessScreen />} />
+                    <Route path="/impact" element={<ImpactScreen />} />
+                </Routes>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(
+            <MemoryRouter>
+                <App />
+            </MemoryRouter>
+        );
+    </script>
+</body>
+</html>
